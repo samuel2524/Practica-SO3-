@@ -1,3 +1,6 @@
+// calculadora_rpn.c
+// Compilar: gcc calculadora_rpn.c -o rpn -lm
+// Ejecutar : ./rpn
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +17,7 @@
 
 typedef struct {
     double values[MAX_STACK];
-    int size;               // cantidad de elementos en la pila
+    int size;
 } Stack;
 
 /* ===== MANEJO DE PILA ===== */
@@ -35,12 +38,6 @@ static int pop(Stack *s, double *out) {
     return 1;
 }
 
-static int peek(const Stack *s, double *out) {
-    if (s->size <= 0) return 0;
-    *out = s->values[s->size - 1];
-    return 1;
-}
-
 static void clear(Stack *s) {
     s->size = 0;
 }
@@ -52,11 +49,9 @@ static void show_stack(const Stack *s) {
 
     for (int pos = VIEW_SIZE; pos >= 1; pos--) {
         double val = 0.0;
-
         if (pos <= s->size) {
             val = s->values[s->size - pos];
         }
-
         printf("Slot %d -> %.6f\n", pos, val);
     }
 
@@ -79,7 +74,7 @@ static void binary_op(Stack *s, char op) {
     double b, a;
 
     if (!pop(s, &b) || !pop(s, &a)) {
-        printf("⚠️  Error: operandos insuficientes\n");
+        printf("Error: operandos insuficientes\n");
         return;
     }
 
@@ -91,7 +86,7 @@ static void binary_op(Stack *s, char op) {
         case '*': r = a * b; break;
         case '/':
             if (b == 0) {
-                printf("⚠️  Error: división por cero\n");
+                printf("Error: división por cero\n");
                 push(s, a);
                 push(s, b);
                 return;
@@ -105,14 +100,14 @@ static void binary_op(Stack *s, char op) {
     }
 
     push(s, r);
-    printf("✔ Resultado parcial: %g\n", r);
+    printf("Resultado parcial: %g\n", r);
 }
 
 static void unary_op(Stack *s, const char *cmd) {
     double a;
 
     if (!pop(s, &a)) {
-        printf("⚠️  Error: pila vacía\n");
+        printf("Error: pila vacía\n");
         return;
     }
 
@@ -120,15 +115,13 @@ static void unary_op(Stack *s, const char *cmd) {
 
     if (strcmp(cmd, "sqrt") == 0) {
         if (a < 0) {
-            printf("⚠️  Error: raíz negativa\n");
+            printf("Error: raíz negativa\n");
             push(s, a);
             return;
         }
         r = sqrt(a);
-    }
-    else {
+    } else {
         double rad = a * M_PI / 180.0;
-
         if (strcmp(cmd, "sin") == 0) r = sin(rad);
         else if (strcmp(cmd, "cos") == 0) r = cos(rad);
         else if (strcmp(cmd, "tan") == 0) r = tan(rad);
@@ -139,20 +132,20 @@ static void unary_op(Stack *s, const char *cmd) {
     }
 
     push(s, r);
-    printf("✔ Resultado parcial: %g\n", r);
+    printf("Resultado parcial: %g\n", r);
 }
 
 static void power_op(Stack *s) {
     double exp, base;
 
     if (!pop(s, &exp) || !pop(s, &base)) {
-        printf("⚠️  Error: pila insuficiente\n");
+        printf("Error: pila insuficiente\n");
         return;
     }
 
     double r = pow(base, exp);
     push(s, r);
-    printf("✔ Resultado parcial: %g\n", r);
+    printf("Resultado parcial: %g\n", r);
 }
 
 /* ===== INTERFAZ ===== */
@@ -165,8 +158,8 @@ static void help(void) {
     printf("Trigonometría en GRADOS\n\n");
     printf("Comandos:\n");
     printf("  s  -> mostrar pila\n");
-    printf("  p  -> ver tope\n");
-    printf("  c  -> limpiar pila\n");
+    printf("  u  -> eliminar último valor (tope)\n");
+    printf("  c  -> limpiar pila completa\n");
     printf("  h  -> ayuda\n");
     printf("  q  -> salir\n");
     printf("-----------------------\n");
@@ -198,13 +191,18 @@ int main(void) {
             else if (strcmp(tk, "h") == 0) help();
             else if (strcmp(tk, "c") == 0) {
                 clear(&stack);
-                printf("✔ Pila reiniciada\n");
+                printf("Pila reiniciada\n");
             }
-            else if (strcmp(tk, "s") == 0) show_stack(&stack);
-            else if (strcmp(tk, "p") == 0) {
-                double t;
-                if (peek(&stack, &t)) printf("Tope actual: %g\n", t);
-                else printf("Pila vacía\n");
+            else if (strcmp(tk, "s") == 0) {
+                show_stack(&stack);
+            }
+            else if (strcmp(tk, "u") == 0) {
+                double removed;
+                if (pop(&stack, &removed)) {
+                    printf("Valor eliminado: %g\n", removed);
+                } else {
+                    printf("Pila vacía, nada que eliminar\n");
+                }
             }
             else if (
                 strcmp(tk, "sin") == 0 ||
@@ -225,7 +223,7 @@ int main(void) {
                 if (parse_value(tk, &num)) {
                     push(&stack, num);
                 } else {
-                    printf("⚠️  Entrada inválida: %s\n", tk);
+                    printf("Entrada inválida: %s\n", tk);
                 }
             }
 

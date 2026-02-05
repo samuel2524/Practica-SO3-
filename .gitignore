@@ -1,0 +1,20 @@
+# Archivos del sistema
+.*
+!.gitignore
+
+# Carpetas comunes
+.cache/
+.local/
+.vscode/
+.vscode-server/
+.dotnet/
+test/
+teste/
+ejercicio
+ejercicio.c
+
+
+# Ejecutables
+*.out
+rpn
+calculadora
